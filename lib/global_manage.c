@@ -14,13 +14,6 @@
 #define I2C_SDA_PIN 0
 #define I2C_SCL_PIN 1
 #define SEA_LEVEL_PRESSURE 101325.0 // Pressão ao nível do mar em Pa
-
-// TODO: VERIFIQUE E AJUSTE ESTES PINOS DE ACORDO COM A SUA PLACA BITDOGLAB
-// #define BUZZER_PIN 15
-// #define LED_R_PIN  12 // Exemplo para um LED RGB
-// #define LED_G_PIN  13
-// #define LED_B_PIN  14
-
 // --- Variáveis de Estado Globais (visíveis apenas neste ficheiro) ---
 
 // Estrutura que armazena todos os dados e configurações.
@@ -48,27 +41,37 @@ void ler_sensores() { // struct repeating_timer *t
     int32_t press_converted = bmp280_convert_pressure(raw_pressure, raw_temp_bmp, &bmp_params); 
 
     // Aplica os offsets de calibração e armazena na estrutura global
-    g_sensor_data.temperatura_bmp = (temp_converted / 100.0f) + g_sensor_data.offset_temp;
-    g_sensor_data.pressao_hpa = (press_converted / 100.0f) + g_sensor_data.offset_press;
+    g_sensor_data.temperatura_bmp = (temp_converted / 100.0f) + g_sensor_data.offset_temp; 
+    g_sensor_data.pressao_hpa = (press_converted / 100.0f) + g_sensor_data.offset_press; 
 
     // Calcula a altitude
     g_sensor_data.altitude = 44330.0 * (1.0 - pow(press_converted / SEA_LEVEL_PRESSURE, 0.1903)); 
 
     // --- Leitura do Sensor AHT20 ---
-    AHT20_Data aht_data;
+    AHT20_Data aht_data; 
     if (aht20_read(I2C_PORT, &aht_data)) { 
-        g_sensor_data.umidade_aht = aht_data.humidity;
+        g_sensor_data.umidade_aht = aht_data.humidity; 
     } else {
-        printf("Erro na leitura do AHT20!\n");
+        printf("Erro na leitura do AHT20!\n"); 
     }
 
-    // --- Atualiza o Buffer Circular para o Gráfico ---
-    // Adiciona a leitura de temperatura mais recente ao histórico
-    g_sensor_data.hist_temp[g_sensor_data.hist_idx] = g_sensor_data.temperatura_bmp;
-    // Avança o índice do buffer, voltando a 0 se chegar ao fim (comportamento circular)
-    g_sensor_data.hist_idx = (g_sensor_data.hist_idx + 1) % 20;
+    // =========================================================================
+    // --- [LÓGICA ALTERADA] Atualiza os Buffers de Histórico (Deslocamento) ---
+    // =========================================================================
 
-    // return true; // Retorna true para que o timer continue a ser chamado
+    // Desloca todos os valores existentes uma posição para a esquerda
+    for (int i = 0; i < 19; i++) {
+        g_sensor_data.hist_temp[i] = g_sensor_data.hist_temp[i + 1];
+        g_sensor_data.hist_umid[i] = g_sensor_data.hist_umid[i + 1];
+        g_sensor_data.hist_press[i] = g_sensor_data.hist_press[i + 1];
+        g_sensor_data.hist_alt[i] = g_sensor_data.hist_alt[i + 1];
+    }
+
+    // Adiciona os novos valores na última posição de cada array
+    g_sensor_data.hist_temp[19] = g_sensor_data.temperatura_bmp;
+    g_sensor_data.hist_umid[19] = g_sensor_data.umidade_aht;
+    g_sensor_data.hist_press[19] = g_sensor_data.pressao_hpa;
+    g_sensor_data.hist_alt[19] = g_sensor_data.altitude;
 }
 
 /**

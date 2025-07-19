@@ -41,6 +41,7 @@
 
 // Estrutura completa para armazenar todos os dados e configurações do sistema.
 typedef struct {
+    
     // Dados lidos dos sensores
     float temperatura_bmp;
     float umidade_aht;
@@ -57,7 +58,10 @@ typedef struct {
     
     // Dados históricos para o gráfico da interface web (últimos 20 valores)
     float hist_temp[20];
-    int hist_idx; // Índice atual para o buffer circular
+    float hist_umid[20];
+    float hist_press[20];
+    float hist_alt[20];
+
 } SENSOR_DATA;
 
 
