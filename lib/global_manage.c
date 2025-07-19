@@ -98,6 +98,12 @@ void init_sensor_manager(void) {
     memset(&g_sensor_data, 0, sizeof(SENSOR_DATA));
     g_sensor_data.limite_min_temp = 20; // Define um limite mínimo padrão
     g_sensor_data.limite_max_temp = 30; // Define um limite máximo padrão
+    g_sensor_data.limite_min_umid = 40;
+    g_sensor_data.limite_max_umid = 60;
+    g_sensor_data.limite_min_press = 900;
+    g_sensor_data.limite_max_press = 1100;
+    g_sensor_data.limite_min_alt = -100;
+    g_sensor_data.limite_max_alt = 1000;
 
     // Agenda o timer para chamar a função 'ler_sensores_callback' a cada 2000 ms (2 segundos)
     // static struct repeating_timer timer;
@@ -140,4 +146,19 @@ void set_press_offset(float offset) {
 void set_limites_temp(int min, int max) {
     g_sensor_data.limite_min_temp = min;
     g_sensor_data.limite_max_temp = max;
+}
+
+void set_limites_umid(int min, int max) {
+    g_sensor_data.limite_min_umid = min;
+    g_sensor_data.limite_max_umid = max;
+}
+
+void set_limites_press(int min, int max) {
+    g_sensor_data.limite_min_press = min;
+    g_sensor_data.limite_max_press = max;
+}
+
+void set_limites_alt(int min, int max) {
+    g_sensor_data.limite_min_alt = min;
+    g_sensor_data.limite_max_alt = max;
 }

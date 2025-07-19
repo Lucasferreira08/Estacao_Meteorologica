@@ -52,9 +52,15 @@ typedef struct {
     float offset_temp;
     float offset_press;
 
-    // Limites de alerta de temperatura configurados via web
+    // [EXPANDIDO] Limites de alerta para todas as propriedades
     int limite_min_temp;
     int limite_max_temp;
+    int limite_min_umid;
+    int limite_max_umid;
+    int limite_min_press;
+    int limite_max_press;
+    int limite_min_alt;
+    int limite_max_alt;
     
     // Dados históricos para o gráfico da interface web (últimos 20 valores)
     float hist_temp[20];
@@ -98,5 +104,9 @@ void set_press_offset(float offset);
  * @param max Limite máximo recebido da interface web.
  */
 void set_limites_temp(int min, int max);
+
+void set_limites_umid(int min, int max);
+void set_limites_press(int min, int max);
+void set_limites_alt(int min, int max);
 
 #endif
