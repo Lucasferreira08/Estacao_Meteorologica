@@ -43,7 +43,12 @@ add_executable(Estacao_Meteorologica Estacao_Meteorologica.c
                     ${CMAKE_CURRENT_LIST_DIR}/lib/bmp280.c
                     ${CMAKE_CURRENT_LIST_DIR}/lib/global_manage.c
                     ${CMAKE_CURRENT_LIST_DIR}/lib/server.c
-                    ${CMAKE_CURRENT_LIST_DIR}/lib/connect_wifi.c)
+                    ${CMAKE_CURRENT_LIST_DIR}/lib/connect_wifi.c
+                    ${CMAKE_CURRENT_LIST_DIR}/lib/alerta_manager.c
+                    ${CMAKE_CURRENT_LIST_DIR}/lib/matriz.c
+                    ${CMAKE_CURRENT_LIST_DIR}/lib/ssd1306.c)
+
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/pio_matrix.pio)
 
 pico_set_program_name(Estacao_Meteorologica "Estacao_Meteorologica")
 pico_set_program_version(Estacao_Meteorologica "0.1")
@@ -68,6 +73,9 @@ target_link_libraries(Estacao_Meteorologica
         pico_cyw43_arch_lwip_threadsafe_background
         pico_stdlib 
         hardware_i2c
+        hardware_pwm
+        hardware_pio
+        hardware_clocks
         FreeRTOS-Kernel 
         FreeRTOS-Kernel-Heap4
         

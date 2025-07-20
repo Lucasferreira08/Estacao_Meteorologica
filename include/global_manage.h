@@ -1,39 +1,3 @@
-// // Ficheiro: global_manage.h
-// #ifndef GLOBAL_MANAGE_H
-// #define GLOBAL_MANAGE_H
-
-// // Estrutura para armazenar os dados e configurações atuais
-// typedef struct {
-//     float temperatura_bmp;
-//     float umidade_aht;
-//     float pressao_hpa;
-//     float altitude;
-//     // Offsets de calibração
-//     float offset_temp;
-//     float offset_press;
-//     // Limites para alertas (exemplo)
-//     int limite_min_temp;
-//     int limite_max_temp;
-//     // Dados históricos para o gráfico (últimos 20 valores)
-//     float hist_temp[20];
-//     int hist_idx; // Índice atual do buffer circular
-// } SENSOR_DATA;
-
-// // Funções para inicializar e obter os dados
-// void init_sensor_manager(void);
-// SENSOR_DATA* get_sensor_data(void);
-
-// void ler_sensores();
-
-// // Funções para definir configurações via web
-// void set_temp_offset(float offset);
-// void set_press_offset(float offset);
-// void set_limites_temp(int min, int max);
-
-// #endif
-
-// Ficheiro: global_manage.h
-
 #ifndef GLOBAL_MANAGE_H
 #define GLOBAL_MANAGE_H
 
