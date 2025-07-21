@@ -5,8 +5,8 @@
 
 // #include "lwip/netif.h"
 
-const char WIFI_SSID[] = "Lucas";  // adicione o ssid da rede
-const char WIFI_PASSWORD[] = "jrxnje23";  // adicione a senha
+const char WIFI_SSID[] = "";  // adicione o ssid da rede
+const char WIFI_PASSWORD[] = "";  // adicione a senha
 
 char* connect_wifi()
 {
@@ -23,12 +23,6 @@ char* connect_wifi()
         printf("Tentando conexão...\n");
     }
     printf("Conectado com sucesso! \n");
-
-    // Caso seja a interface de rede padrão.
-    // if (netif_default)
-    // {
-    //     printf("IP do dispositivo: %s\n", ipaddr_ntoa(&netif_default->ip_addr));
-    // }
 
     uint8_t *ip = (uint8_t *)&(cyw43_state.netif[0].ip_addr.addr);
     static char ip_str[24];
