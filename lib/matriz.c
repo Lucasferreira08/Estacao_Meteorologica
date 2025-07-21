@@ -6,13 +6,13 @@
 // Luz vermelha (parte superior do semáforo)
 static double desenho_alerta_sup[25] = {0.0, 0.0, 1.0, 0.0, 0.0,
                                         0.0, 1.0, 1.0, 1.0, 0.0, 
-                                        0.0, 0.0, 1.0, 0.0, 0.0,
+                                        1.0, 1.0, 1.0, 1.0, 1.0,
                                         0.0, 0.0, 1.0, 0.0, 0.0,
                                         0.0, 0.0, 1.0, 0.0, 0.0};
 
 static double desenho_alerta_inf[25] = {0.0, 0.0, 1.0, 0.0, 0.0,
                                         0.0, 0.0, 1.0, 0.0, 0.0, 
-                                        0.0, 0.0, 1.0, 0.0, 0.0,
+                                        1.0, 1.0, 1.0, 1.0, 1.0,
                                         0.0, 1.0, 1.0, 1.0, 0.0,
                                         0.0, 0.0, 1.0, 0.0, 0.0};
 
@@ -67,7 +67,7 @@ void desenhar_alerta_lim_superior(PIO pio, uint sm)
 {
     uint32_t valor_led;
 
-    desenho_pio(desenho_alerta_sup, valor_led, pio, sm, 0.0, 0.1, 0.0); // Vermelho (r=1.0)
+    desenho_pio(desenho_alerta_sup, valor_led, pio, sm, 0.0, 0.0, 0.1); // Vermelho (r=1.0)
 }
 
 void desenhar_alerta_lim_inferior(PIO pio, uint sm)

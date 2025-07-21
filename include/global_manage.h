@@ -15,6 +15,8 @@ typedef struct {
     // Offsets de calibração configurados via web
     float offset_temp;
     float offset_press;
+    float offset_umid; 
+    float offset_alt;
 
     // [EXPANDIDO] Limites de alerta para todas as propriedades
     int limite_min_temp;
@@ -61,6 +63,9 @@ void set_temp_offset(float offset);
  * @param offset Valor do offset recebido da interface web.
  */
 void set_press_offset(float offset);
+
+void set_umid_offset(float offset);
+void set_alt_offset(float offset);
 
 /**
  * @brief Define os limites mínimo e máximo de temperatura para os alertas.

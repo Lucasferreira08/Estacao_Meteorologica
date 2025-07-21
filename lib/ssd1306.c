@@ -206,38 +206,177 @@ void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y)
 //     return &ssd;
 // }
 
-/**
- * Desenha os dados no display no modo alerta
- */
-void desenha_display_alerta(ssd1306_t *display) {
-    char buffer[30];
+// /**
+//  * Desenha os dados no display no modo alerta
+//  */
+// void desenha_display_alerta_sup(ssd1306_t *display, SENSOR_DATA *data) {
+//     char buffer[30];
     
+//     ssd1306_fill(display, 0);
+    
+//     // Título com ênfase
+//     ssd1306_draw_string(display, "Alerta !!!", 0, 0);
+//     //ssd1306_line(display, 0, 10, WIDTH-1, 10, 1);
+    
+//     // Nível de água com alerta visual se acima do limite
+//     ssd1306_draw_string(display, "Limite violado", 0, 15);
+//     // snprintf(buffer, sizeof(buffer), "%d%%", dados->nivel_agua);
+//     // ssd1306_draw_string(display, buffer, 0, 25);
+    
+//     // Volume de chuva com alerta visual se acima do limite
+//     // ssd1306_draw_string(display, "Volume chuva:", 0, 40);
+//     // snprintf(buffer, sizeof(buffer), "%d%%", dados->volume_chuva);
+//     // ssd1306_draw_string(display, buffer, 0, 50);
+    
+//     // Modo de operação
+//     // ssd1306_draw_string(display, "MODO: ALERTA!", 0, 65);
+    
+//     ssd1306_send_data(display);
+// }
+
+// void desenha_display_alerta_inf(ssd1306_t *display, SENSOR_DATA *data) {
+//     char buffer[30];
+    
+//     ssd1306_fill(display, 0);
+    
+//     // Título com ênfase
+//     ssd1306_draw_string(display, "Alerta !!!", 0, 0);
+//     //ssd1306_line(display, 0, 10, WIDTH-1, 10, 1);
+    
+//     // Nível de água com alerta visual se acima do limite
+//     ssd1306_draw_string(display, "Limite violado", 0, 15);
+//     // snprintf(buffer, sizeof(buffer), "%d%%", dados->nivel_agua);
+//     // ssd1306_draw_string(display, buffer, 0, 25);
+    
+//     // Volume de chuva com alerta visual se acima do limite
+//     // ssd1306_draw_string(display, "Volume chuva:", 0, 40);
+//     // snprintf(buffer, sizeof(buffer), "%d%%", dados->volume_chuva);
+//     // ssd1306_draw_string(display, buffer, 0, 50);
+    
+//     // Modo de operação
+//     // ssd1306_draw_string(display, "MODO: ALERTA!", 0, 65);
+    
+//     ssd1306_send_data(display);
+// }
+
+// /**
+//  * Desenha os dados no display no modo normal
+//  */
+// void desenha_display_normal(ssd1306_t *display, SENSOR_DATA *data) {
+//     char buffer[30];
+    
+//     ssd1306_fill(display, 0);
+    
+//     // Título
+//     ssd1306_draw_string(display, "MONITORAMENTO", 0, 0);
+    
+//     // Nível de água
+//     ssd1306_draw_string(display, "Niveis normais", 0, 15);
+//     // snprintf(buffer, sizeof(buffer), "%d%%", dados->nivel_agua);
+//     // ssd1306_draw_string(display, buffer, 0, 25);
+    
+//     // Volume de chuva
+//     // ssd1306_draw_string(display, "Volume chuva:", 0, 40);
+//     // snprintf(buffer, sizeof(buffer), "%d%%", dados->volume_chuva);
+//     // ssd1306_draw_string(display, buffer, 0, 50);
+    
+//     // Modo de operação
+//     // ssd1306_draw_string(display, "MODO: NORMAL", 0, 65);
+    
+//     ssd1306_send_data(display);
+// }
+
+/**
+ * @brief Desenha a tela de ALERTA para limites SUPERIORES violados.
+ * A função verifica qual grandeza (ou grandezas) ultrapassou o limite máximo
+ * e exibe a informação correspondente.
+ * @param display Ponteiro para a estrutura do display.
+ * @param data Ponteiro para a estrutura com os dados dos sensores.
+ */
+void desenha_display_alerta_sup(ssd1306_t *display, SENSOR_DATA *data) {
+    char buffer[22]; // Buffer para formatar as strings
+
+    ssd1306_fill(display, 0); // Limpa a tela
+    
+    // Título do Alerta
+    ssd1306_draw_string(display, "    ALERTA MAX", 0, 0);
+    ssd1306_hline(display, 0, 127, 10, 1); // Linha separadora
+
+    uint8_t linha_atual = 15; // Posição Y inicial para as mensagens
+
+    // Verifica cada grandeza e exibe a mensagem de alerta se o limite for ultrapassado
+    if (data->temperatura_bmp > data->limite_max_temp) {
+        snprintf(buffer, sizeof(buffer), "T: %.1fC > %dC", data->temperatura_bmp, data->limite_max_temp);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+        linha_atual += 12; // Move para a próxima linha
+    }
+    if (data->umidade_aht > data->limite_max_umid) {
+        snprintf(buffer, sizeof(buffer), "U: %.1f%% > %d%%", data->umidade_aht, data->limite_max_umid);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+        linha_atual += 12;
+    }
+    if (data->pressao_hpa > data->limite_max_press) {
+        snprintf(buffer, sizeof(buffer), "P: %.0fhPa > %d", data->pressao_hpa, data->limite_max_press);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+        linha_atual += 12;
+    }
+    if (data->altitude > data->limite_max_alt) {
+        snprintf(buffer, sizeof(buffer), "A: %.0fm > %dm", data->altitude, data->limite_max_alt);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+    }
+    
+    ssd1306_send_data(display); // Envia o buffer para o display
+}
+
+/**
+ * @brief Desenha a tela de ALERTA para limites INFERIORES violados.
+ * A função verifica qual grandeza (ou grandezas) ficou abaixo do limite mínimo
+ * e exibe a informação correspondente.
+ * @param display Ponteiro para a estrutura do display.
+ * @param data Ponteiro para a estrutura com os dados dos sensores.
+ */
+void desenha_display_alerta_inf(ssd1306_t *display, SENSOR_DATA *data) {
+    char buffer[22];
+
     ssd1306_fill(display, 0);
     
-    // Título com ênfase
-    ssd1306_draw_string(display, "Alerta !!!", 0, 0);
-    //ssd1306_line(display, 0, 10, WIDTH-1, 10, 1);
-    
-    // Nível de água com alerta visual se acima do limite
-    ssd1306_draw_string(display, "Limite violado", 0, 15);
-    // snprintf(buffer, sizeof(buffer), "%d%%", dados->nivel_agua);
-    // ssd1306_draw_string(display, buffer, 0, 25);
-    
-    // Volume de chuva com alerta visual se acima do limite
-    // ssd1306_draw_string(display, "Volume chuva:", 0, 40);
-    // snprintf(buffer, sizeof(buffer), "%d%%", dados->volume_chuva);
-    // ssd1306_draw_string(display, buffer, 0, 50);
-    
-    // Modo de operação
-    // ssd1306_draw_string(display, "MODO: ALERTA!", 0, 65);
+    // Título do Alerta
+    ssd1306_draw_string(display, "    ALERTA MIN", 0, 0);
+    ssd1306_hline(display, 0, 127, 10, 1);
+
+    uint8_t linha_atual = 15;
+
+    // Verifica cada grandeza e exibe a mensagem de alerta se abaixo do limite
+    if (data->temperatura_bmp < data->limite_min_temp) {
+        snprintf(buffer, sizeof(buffer), "T: %.1fC < %dC", data->temperatura_bmp, data->limite_min_temp);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+        linha_atual += 12;
+    }
+    if (data->umidade_aht < data->limite_min_umid) {
+        snprintf(buffer, sizeof(buffer), "U: %.1f%% < %d%%", data->umidade_aht, data->limite_min_umid);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+        linha_atual += 12;
+    }
+    if (data->pressao_hpa < data->limite_min_press) {
+        snprintf(buffer, sizeof(buffer), "P: %.0fhPa < %d", data->pressao_hpa, data->limite_min_press);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+        linha_atual += 12;
+    }
+    if (data->altitude < data->limite_min_alt) {
+        snprintf(buffer, sizeof(buffer), "A: %.0fm < %dm", data->altitude, data->limite_min_alt);
+        ssd1306_draw_string(display, buffer, 0, linha_atual);
+    }
     
     ssd1306_send_data(display);
 }
 
 /**
- * Desenha os dados no display no modo normal
+ * @brief Desenha a tela de monitoramento NORMAL, exibindo os dados atuais dos sensores.
+ * Os dados são organizados em duas colunas para melhor aproveitamento do espaço.
+ * @param display Ponteiro para a estrutura do display.
+ * @param data Ponteiro para a estrutura com os dados dos sensores.
  */
-void desenha_display_normal(ssd1306_t *display) {
+void desenha_display_normal(ssd1306_t *display, SENSOR_DATA *data) {
     char buffer[30];
     
     ssd1306_fill(display, 0);
@@ -245,18 +384,27 @@ void desenha_display_normal(ssd1306_t *display) {
     // Título
     ssd1306_draw_string(display, "MONITORAMENTO", 0, 0);
     
-    // Nível de água
-    ssd1306_draw_string(display, "Niveis normais", 0, 15);
-    // snprintf(buffer, sizeof(buffer), "%d%%", dados->nivel_agua);
-    // ssd1306_draw_string(display, buffer, 0, 25);
+    // Coluna da Esquerda
+    // Temperatura
+    ssd1306_draw_string(display, "T:", 0, 15);
+    snprintf(buffer, sizeof(buffer), "%.1f C", data->temperatura_bmp);
+    ssd1306_draw_string(display, buffer, 0, 25);
     
-    // Volume de chuva
-    // ssd1306_draw_string(display, "Volume chuva:", 0, 40);
-    // snprintf(buffer, sizeof(buffer), "%d%%", dados->volume_chuva);
-    // ssd1306_draw_string(display, buffer, 0, 50);
+    // Pressão
+    ssd1306_draw_string(display, "P:", 0, 40);
+    snprintf(buffer, sizeof(buffer), "%.0f hPa", data->pressao_hpa);
+    ssd1306_draw_string(display, buffer, 0, 50);
+
+    // Coluna da Direita
+    // Umidade
+    ssd1306_draw_string(display, "U:", 70, 15);
+    snprintf(buffer, sizeof(buffer), "%.1f %%", data->umidade_aht);
+    ssd1306_draw_string(display, buffer, 70, 25);
     
-    // Modo de operação
-    // ssd1306_draw_string(display, "MODO: NORMAL", 0, 65);
+    // Altitude
+    ssd1306_draw_string(display, "A:", 70, 40);
+    snprintf(buffer, sizeof(buffer), "%.0f m", data->altitude);
+    ssd1306_draw_string(display, buffer, 70, 50);
     
     ssd1306_send_data(display);
 }

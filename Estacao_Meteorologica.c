@@ -15,23 +15,68 @@
 #include "FreeRTOS.h"        // Kernel FreeRTOS
 #include "task.h"            // API de criação e controle de tarefas FreeRTOS
 
-bool alerta;
-bool connected;
+#define BUTTON_PIN 5
+
+bool alerta=false;
+bool connected=false;
+ssd1306_t ssd;
+
+// ==========================================================
+// LÓGICA DO BOTÃO COM INTERRUPÇÃO
+// ==========================================================
+// Callback: esta função é executada quando a interrupção do botão ocorre
+void btn_callback(uint gpio, uint32_t events) {
+    // Lógica simples de debounce: ignora interrupções por 250ms
+    static uint32_t last_press_time = 0;
+    uint32_t current_time = to_ms_since_boot(get_absolute_time());
+    if (current_time - last_press_time < 250) {
+        return;
+    }
+    last_press_time = current_time;
+
+    // Ação principal da interrupção
+    if (gpio == BUTTON_PIN) {
+        connected = true; // Ativa a flag 'connected'
+        printf("Botão pressionado! Flag 'connected' ativada.\n");
+    }
+}
+
+// Função para configurar o botão
+void setup_button() {
+    gpio_init(BUTTON_PIN);
+    gpio_set_dir(BUTTON_PIN, GPIO_IN);
+    gpio_pull_up(BUTTON_PIN); // Habilita resistor de pull-up interno
+
+    // Configura a interrupção para ser acionada na borda de descida (quando o botão é pressionado)
+    gpio_set_irq_enabled_with_callback(BUTTON_PIN, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
+}
 
 // Tarefa que controla o web_server
 void vServerTask()
 {
-    int result = connect_wifi();
-    if (result) return;
+    ssd1306_fill(&ssd, 0);
+    ssd1306_draw_string(&ssd, "CONECTANDO...", 0, 0);
+    ssd1306_send_data(&ssd);
+    vTaskDelay(pdMS_TO_TICKS(2000));     
 
+    char* result = connect_wifi();
     start_http_server();
 
-    connected=true;
+    ssd1306_fill(&ssd, 0);
+    ssd1306_draw_string(&ssd, "CONECTADO", 0, 0);
+    ssd1306_draw_string(&ssd, "IP:", 0, 15); // Ajuste de posição Y para melhor visualização
+    if (result) {
+        ssd1306_draw_string(&ssd, result, 25, 15);
+    }
+    ssd1306_draw_string(&ssd, "Aperte botao A", 0, 30);
+    ssd1306_draw_string(&ssd, "para iniciar...", 0, 40);
+
+    ssd1306_send_data(&ssd);
 
     while (true)
     {
         cyw43_arch_poll(); // Necessário para manter o Wi-Fi ativo
-        vTaskDelay(pdMS_TO_TICKS(1));    // Esperar 100ms
+        vTaskDelay(pdMS_TO_TICKS(50));    // Esperar 100ms
     }
 
     cyw43_arch_deinit();
@@ -50,11 +95,8 @@ void vSensorTask()
 
 void vAlerta1Task()
 {
-    ssd1306_t ssd;
     PIO pio = pio0;
     uint sm = pio_init(pio); // Inicializa State Machine para PIO
-
-    display_init(&ssd);
 
     SENSOR_DATA *data = get_sensor_data();
 
@@ -65,19 +107,19 @@ void vAlerta1Task()
             if (data->temperatura_bmp>data->limite_max_temp || data->pressao_hpa>data->limite_max_press || data->umidade_aht>data->limite_max_umid || data->altitude>data->limite_max_alt) 
             {
                 desenhar_alerta_lim_superior(pio, sm);
-                desenha_display_alerta(&ssd);
+                desenha_display_alerta_sup(&ssd, data);
                 alerta=true;
             }
             else if (data->temperatura_bmp<data->limite_min_temp || data->pressao_hpa<data->limite_min_press || data->umidade_aht<data->limite_min_umid || data->altitude<data->limite_min_alt) 
             {
                 desenhar_alerta_lim_inferior(pio, sm);
-                desenha_display_alerta(&ssd);
+                desenha_display_alerta_inf(&ssd, data);
                 alerta=true;
             }
             else 
             {
                 apagar_matriz(pio, sm);
-                desenha_display_normal(&ssd);
+                desenha_display_normal(&ssd, data);
                 alerta=false;
             }
         }
@@ -90,7 +132,7 @@ void vAlerta2Task(void *pvParameters) {
     leds_init();
     
     while (1) {
-        if (alerta && connected) {
+        if (alerta && connected) {  
             // Em modo alerta, alterna LED e gera tom no buzzer
             gpio_put(LED_RED, 0);
             gpio_put(LED_BLUE, 1);
@@ -115,6 +157,9 @@ void vAlerta2Task(void *pvParameters) {
 int main()
 {
     stdio_init_all();
+    display_init(&ssd);
+
+    setup_button();
 
     xTaskCreate(vServerTask, "Server Task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vSensorTask, "Sensor Task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);

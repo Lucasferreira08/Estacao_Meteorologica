@@ -10,7 +10,7 @@
 // HTML / CSS / JavaScript - FINAL COM TODOS OS CAMPOS E GRÁFICOS
 // =================================================================================
 const char HTML_BODY[] =
-    "<!DOCTYPE html><html><head><title>Estação Meteorológica BitDogLab</title><meta charset='UTF-8'>"
+    "<!DOCTYPE html><html><head><title>Estação Meteorológica</title><meta charset='UTF-8'>"
     "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
     "<style>"
     "body{font-family:sans-serif;background:#f0f2f5;display:flex;justify-content:center;padding:10px;margin:0}"
@@ -46,6 +46,8 @@ const char HTML_BODY[] =
     "document.getElementById('press').innerText=d.press.toFixed(2);document.getElementById('alt').innerText=d.alt.toFixed(2);"
     "if(!document.activeElement.id.includes('input')){document.getElementById('input_offset_temp').value=d.offset_temp;"
     "document.getElementById('input_offset_press').value=d.offset_press;"
+    "document.getElementById('input_offset_umid').value=d.offset_umid;"
+    "document.getElementById('input_offset_alt').value=d.offset_alt;"
     "document.getElementById('input_limite_min_temp').value=d.limite_min_temp;document.getElementById('input_limite_max_temp').value=d.limite_max_temp;"
     "document.getElementById('input_limite_min_umid').value=d.limite_min_umid;document.getElementById('input_limite_max_umid').value=d.limite_max_umid;"
     "document.getElementById('input_limite_min_press').value=d.limite_min_press;document.getElementById('input_limite_max_press').value=d.limite_max_press;"
@@ -57,14 +59,16 @@ const char HTML_BODY[] =
     "}).catch(e=>console.error('Erro:',e))}"
     "window.onload=()=>{initCharts();atualizarDados();setInterval(atualizarDados,2000)};"
     "</script></head><body>"
-    "<div class=container><h1>Estação Meteorológica BitDogLab</h1><div class=grid>"
+    "<div class=container><h1>Estação Meteorológica</h1><div class=grid>"
     "<div class=card><p id=temp>--</p><span>Temperatura (°C)</span></div><div class=card><p id=umid>--</p><span>Umidade (%)</span></div>"
     "<div class=card><p id=press>--</p><span>Pressão (hPa)</span></div><div class=card><p id=alt>--</p><span>Altitude (m)</span></div></div>"
     "<div class=charts-grid><div class=chart-container><canvas id=tempChart></canvas></div><div class=chart-container><canvas id=umidChart></canvas></div>"
     "<div class=chart-container><canvas id=pressChart></canvas></div><div class=chart-container><canvas id=altChart></canvas></div></div><hr>"
     "<h2>Configurações de Calibração</h2><div class=form-grid>"
     "<div class=form-group><label>Offset Temperatura:</label><input type=number step=0.1 id=input_offset_temp><button onclick=\"setConfig('offset_temp')\">Definir</button></div>"
-    "<div class=form-group><label>Offset Pressão:</label><input type=number step=0.1 id=input_offset_press><button onclick=\"setConfig('offset_press')\">Definir</button></div></div>"
+    "<div class=form-group><label>Offset Umidade:</label><input type=number step=0.1 id=input_offset_umid><button onclick=\"setConfig('offset_umid')\">Definir</button></div>"
+    "<div class=form-group><label>Offset Pressão:</label><input type=number step=0.1 id=input_offset_press><button onclick=\"setConfig('offset_press')\">Definir</button></div>"
+    "<div class=form-group><label>Offset Altitude:</label><input type=number step=0.1 id=input_offset_alt><button onclick=\"setConfig('offset_alt')\">Definir</button></div></div>"
     "<h2>Configurações de Alertas</h2><div class=form-grid>"
     "<div class=form-group><label>Limites Temperatura (°C):</label><div class=limit-inputs><input type=number placeholder=Min id=input_limite_min_temp> <input type=number placeholder=Max id=input_limite_max_temp></div><button onclick=\"setLimits('temp')\">Definir</button></div>"
     "<div class=form-group><label>Limites Umidade (%):</label><div class=limit-inputs><input type=number placeholder=Min id=input_limite_min_umid> <input type=number placeholder=Max id=input_limite_max_umid></div><button onclick=\"setLimits('umid')\">Definir</button></div>"
@@ -184,7 +188,7 @@ static err_t http_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
         
         snprintf(json_body, sizeof(json_body),
             "{\"temp\":%.2f,\"umid\":%.2f,\"press\":%.2f,\"alt\":%.2f,"
-            "\"offset_temp\":%.2f,\"offset_press\":%.2f,"
+            "\"offset_temp\":%.2f,\"offset_press\":%.2f,\"offset_umid\":%.2f,\"offset_alt\":%.2f,"
             "\"limite_min_temp\":%d,\"limite_max_temp\":%d,"
             "\"limite_min_umid\":%d,\"limite_max_umid\":%d,"
             "\"limite_min_press\":%d,\"limite_max_press\":%d,"
@@ -192,7 +196,7 @@ static err_t http_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
             "\"hist_labels\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],"
             "\"hist_temp\":%s,\"hist_umid\":%s,\"hist_press\":%s,\"hist_alt\":%s}",
             data->temperatura_bmp, data->umidade_aht, data->pressao_hpa, data->altitude,
-            data->offset_temp, data->offset_press,
+            data->offset_temp, data->offset_press, data->offset_umid, data->offset_alt,
             data->limite_min_temp, data->limite_max_temp, data->limite_min_umid, data->limite_max_umid,
             data->limite_min_press, data->limite_max_press, data->limite_min_alt, data->limite_max_alt,
             hist_temp_str, hist_umid_str, hist_press_str, hist_alt_str);
@@ -204,18 +208,23 @@ static err_t http_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
 
     } else if (strncmp(req_buffer, "GET /config?", 12) == 0) {
         state->phase = SENDING_BODY;
-        char* min_str, *max_str;
+        char* value_ptr;
         
-        if ((min_str = strstr(req_buffer, "offset_temp="))) { set_temp_offset(atof(min_str + 12)); }
-        else if ((min_str = strstr(req_buffer, "offset_press="))) { set_press_offset(atof(min_str + 13)); }
-        else if ((min_str = strstr(req_buffer, "limite_min_temp=")) && (max_str = strstr(req_buffer, "limite_max_temp="))) {
-            set_limites_temp(atoi(min_str + 16), atoi(max_str + 16));
-        } else if ((min_str = strstr(req_buffer, "limite_min_umid=")) && (max_str = strstr(req_buffer, "limite_max_umid="))) {
-            set_limites_umid(atoi(min_str + 16), atoi(max_str + 16));
-        } else if ((min_str = strstr(req_buffer, "limite_min_press=")) && (max_str = strstr(req_buffer, "limite_max_press="))) {
-            set_limites_press(atoi(min_str + 17), atoi(max_str + 17));
-        } else if ((min_str = strstr(req_buffer, "limite_min_alt=")) && (max_str = strstr(req_buffer, "limite_max_alt="))) {
-            set_limites_alt(atoi(min_str + 15), atoi(max_str + 15));
+        if ((value_ptr = strstr(req_buffer, "offset_temp="))) { set_temp_offset(atof(value_ptr + 12)); }
+        else if ((value_ptr = strstr(req_buffer, "offset_umid="))) { set_umid_offset(atof(value_ptr + 12)); }
+        else if ((value_ptr = strstr(req_buffer, "offset_press="))) { set_press_offset(atof(value_ptr + 13)); }
+        else if ((value_ptr = strstr(req_buffer, "offset_alt="))) { set_alt_offset(atof(value_ptr + 11)); }
+        else { 
+            char* min_str, *max_str;
+            if ((min_str = strstr(req_buffer, "limite_min_temp=")) && (max_str = strstr(req_buffer, "limite_max_temp="))) {
+                set_limites_temp(atoi(min_str + 16), atoi(max_str + 16));
+            } else if ((min_str = strstr(req_buffer, "limite_min_umid=")) && (max_str = strstr(req_buffer, "limite_max_umid="))) {
+                set_limites_umid(atoi(min_str + 16), atoi(max_str + 16));
+            } else if ((min_str = strstr(req_buffer, "limite_min_press=")) && (max_str = strstr(req_buffer, "limite_max_press="))) {
+                set_limites_press(atoi(min_str + 17), atoi(max_str + 17));
+            } else if ((min_str = strstr(req_buffer, "limite_min_alt=")) && (max_str = strstr(req_buffer, "limite_max_alt="))) {
+                set_limites_alt(atoi(min_str + 15), atoi(max_str + 15));
+            }
         }
 
         const char* msg = "OK";

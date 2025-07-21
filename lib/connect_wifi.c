@@ -8,12 +8,12 @@
 const char WIFI_SSID[] = "Lucas";  // adicione o ssid da rede
 const char WIFI_PASSWORD[] = "jrxnje23";  // adicione a senha
 
-int connect_wifi()
+char* connect_wifi()
 {
     if (cyw43_arch_init())
     {
         printf("Não foi possível conectar.");
-        return 1;
+        return NULL;
     }
     printf("Wi-Fi inicializado com sucesso\n"); // Mensagem de sucesso na inicialização
     cyw43_arch_enable_sta_mode(); // Habilita o modo estação (client) para a Pico
@@ -31,9 +31,9 @@ int connect_wifi()
     // }
 
     uint8_t *ip = (uint8_t *)&(cyw43_state.netif[0].ip_addr.addr);
-    char ip_str[24];
+    static char ip_str[24];
     snprintf(ip_str, sizeof(ip_str), "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
     printf("IP: %s\n", ip_str);
 
-    return 0;
+    return ip_str;
 }

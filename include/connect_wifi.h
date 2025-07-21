@@ -3,6 +3,6 @@
 
 #include "pico/cyw43_arch.h"
 
-int connect_wifi();
+char* connect_wifi();
 
 #endif

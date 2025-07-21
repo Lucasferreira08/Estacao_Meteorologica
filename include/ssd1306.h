@@ -6,6 +6,8 @@
 #include "hardware/i2c.h"
 #include <string.h>
 #include <stdio.h>
+
+#include "global_manage.h"
  
 #define WIDTH 128
 #define HEIGHT 64
@@ -76,12 +78,11 @@ void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y);
 /**
  * Desenha os dados no display no modo alerta
  */
-void desenha_display_alerta(ssd1306_t *display);
+void desenha_display_alerta_sup(ssd1306_t *display, SENSOR_DATA *data);
 
-/**
- * Desenha os dados no display no modo normal
- */
-void desenha_display_normal(ssd1306_t *display);
+void desenha_display_alerta_inf(ssd1306_t *display, SENSOR_DATA *data);
+
+void desenha_display_normal(ssd1306_t *display, SENSOR_DATA *data);
 
 void display_init(ssd1306_t *ssd);
 

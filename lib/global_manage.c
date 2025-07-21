@@ -40,19 +40,31 @@ void ler_sensores() { // struct repeating_timer *t
     int32_t temp_converted = bmp280_convert_temp(raw_temp_bmp, &bmp_params); 
     int32_t press_converted = bmp280_convert_pressure(raw_pressure, raw_temp_bmp, &bmp_params); 
 
-    // Aplica os offsets de calibração e armazena na estrutura global
-    g_sensor_data.temperatura_bmp = (temp_converted / 100.0f) + g_sensor_data.offset_temp; 
-    g_sensor_data.pressao_hpa = (press_converted / 100.0f) + g_sensor_data.offset_press; 
+    // // Aplica os offsets de calibração e armazena na estrutura global
+    // g_sensor_data.temperatura_bmp = (temp_converted / 100.0f) + g_sensor_data.offset_temp; 
+    // g_sensor_data.pressao_hpa = (press_converted / 100.0f) + g_sensor_data.offset_press; 
 
-    // Calcula a altitude
-    g_sensor_data.altitude = 44330.0 * (1.0 - pow(press_converted / SEA_LEVEL_PRESSURE, 0.1903)); 
+    // // Calcula a altitude
+    // g_sensor_data.altitude = 44330.0 * (1.0 - pow(press_converted / SEA_LEVEL_PRESSURE, 0.1903)); 
+
+    // // --- Leitura do Sensor AHT20 ---
+    // AHT20_Data aht_data; 
+    // if (aht20_read(I2C_PORT, &aht_data)) { 
+    //     g_sensor_data.umidade_aht = aht_data.humidity; 
+    // } else {
+    //     printf("Erro na leitura do AHT20!\n"); 
+    // }
+
+    // [ATUALIZADO] Aplica todos os offsets
+    g_sensor_data.temperatura_bmp = (temp_converted / 100.0f) + g_sensor_data.offset_temp;
+    g_sensor_data.pressao_hpa = (press_converted / 100.0f) + g_sensor_data.offset_press;
+    double altitude_calculada = 44330.0 * (1.0 - pow(press_converted / SEA_LEVEL_PRESSURE, 0.1903));
+    g_sensor_data.altitude = altitude_calculada + g_sensor_data.offset_alt; // APLICA OFFSET DE ALTITUDE
 
     // --- Leitura do Sensor AHT20 ---
-    AHT20_Data aht_data; 
-    if (aht20_read(I2C_PORT, &aht_data)) { 
-        g_sensor_data.umidade_aht = aht_data.humidity; 
-    } else {
-        printf("Erro na leitura do AHT20!\n"); 
+    AHT20_Data aht_data;
+    if (aht20_read(I2C_PORT, &aht_data)) {
+        g_sensor_data.umidade_aht = aht_data.humidity + g_sensor_data.offset_umid; // APLICA OFFSET DE UMIDADE
     }
 
     // =========================================================================
@@ -136,6 +148,14 @@ void set_temp_offset(float offset) {
  */
 void set_press_offset(float offset) {
     g_sensor_data.offset_press = offset;
+}
+
+void set_umid_offset(float offset) {
+    g_sensor_data.offset_umid = offset;
+}
+
+void set_alt_offset(float offset) {
+    g_sensor_data.offset_alt = offset;
 }
 
 /**
